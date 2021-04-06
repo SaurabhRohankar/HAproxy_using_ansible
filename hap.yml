@@ -1,0 +1,24 @@
+- hosts: localhost
+  vars_prompt:   
+  -  name: lb_port
+     prompt: "Enter the load balancer port no"
+     private: no
+  
+  tasks:
+  -  name: "Installing haproxy"
+     package:
+             name: "haproxy"
+             state: present
+
+  -  name: "templating config file"
+     template:
+             src: "haproxy.cfg"
+             dest: "/etc/haproxy"
+     notify: restart service
+
+  handlers:
+          -  name: restart service
+             service:
+                     name: "haproxy"
+                     state: restarted
+             #enabled: yes

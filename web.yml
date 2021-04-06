@@ -1,0 +1,50 @@
+- hosts: webservers
+  vars:
+          host_name: "{{ ansible_facts['default_ipv4']['address'] }}"
+
+  tasks:
+  -  name: "creating mount directory"
+     file:
+             state: directory
+             path: "/dvd"
+
+  -  name: "Moounting disk to /dvd "
+     mount:
+             src: "/dev/sr0"
+             path: "/dvd"
+             state: mounted
+             fstype: "iso9660"
+
+  -  name: "Configuring yum repo for appstreamr"
+     yum_repository:
+             baseurl: "file:///dvd/AppStream"
+             name: "appstream"
+             description: "This is appstream repo"
+             gpgcheck: no
+
+  -  name: "Configuring yum repo for baseos"
+     yum_repository:
+             baseurl: "file:///dvd/BaseOS"
+             name: "baseos"
+             description: "This is baseos repo"
+             gpgcheck: no
+
+
+  -  name: "Installing apache"
+     package:
+             name: "httpd"
+             state: present
+
+  -  name: "Copying content"
+     template:
+             dest: "/var/www/html"
+             src: "index.html"
+     notify: restart service
+
+  handlers:
+          -  name: restart service
+             service:
+                     name: "httpd"
+                     state: restarted
+             #  enabled: yes
+
